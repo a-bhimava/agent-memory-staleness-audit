@@ -1,5 +1,7 @@
 # agent-memory-staleness-audit
 
+[![CI](https://github.com/a-bhimava/agent-memory-staleness-audit/actions/workflows/ci.yml/badge.svg)](https://github.com/a-bhimava/agent-memory-staleness-audit/actions/workflows/ci.yml)&nbsp;[![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+
 **Finds agent memories that have quietly gone stale — facts that were true when stored and are
 silently wrong now, with nothing in the memory store to contradict them.**
 
@@ -198,8 +200,8 @@ JSONL export needs none of them.
 
 - [`docs/gate-0.md`](docs/gate-0.md) — the pre-code novelty check: incumbents, the surviving gap,
   claim verification, and the criteria that would retire this project
-- [`notebooks/01_quickstart.ipynb`](notebooks/01_quickstart.ipynb) — runs end-to-end in Google
-  Colab with no API key and no credentials
+- [`notebooks/01_quickstart.ipynb`](notebooks/01_quickstart.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/a-bhimava/agent-memory-staleness-audit/blob/main/notebooks/01_quickstart.ipynb)
+  — runs end to end with no API key. Outputs are committed, so it reads without running
 
 ---
 
@@ -208,6 +210,20 @@ JSONL export needs none of them.
 This tool scores heuristics over provenance metadata. **A high staleness score is a prompt to
 re-verify, never a determination that a fact is false**, and a `FRESH` verdict is not a warranty
 that a memory is true. Nothing here is a substitute for a system of record.
+
+## Related work
+
+This is one of four harnesses built on the same principle: **a model's output is not evidence
+until something independent of the model can check it.** They share a house style — frozen
+pydantic records, content-addressed run manifests, a buffered exporter that refuses to publish an
+unsupported claim — and deliberately share no dependency, so each clones and runs on its own.
+
+| Repository | What it does |
+|---|---|
+| [`rag-citation-guardrail`](https://github.com/a-bhimava/rag-citation-guardrail) | refusal correctness for RAG over regulated KYC/AML documents |
+| [`agent-trace-to-evals`](https://github.com/a-bhimava/agent-trace-to-evals) | mining production agent traces into pytest regression assertions |
+| [`llm-credit-decision-audit`](https://github.com/a-bhimava/llm-credit-decision-audit) | causal audit harness for AI underwriting agents, ECOA / 12 CFR §1002.9 |
+| [`projectsyard`](https://github.com/a-bhimava/projectsyard) | founding-PM case study — 0-to-1 to Product Hunt Top 10 |
 
 ## License
 
