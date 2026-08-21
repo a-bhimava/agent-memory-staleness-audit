@@ -1,0 +1,77 @@
+# Fact-type volatility — half-lives in days.
+#
+# This file is the load-bearing part of the whole tool and it is deliberately hand-authored
+# rather than model-inferred. A reviewer has to be able to point at one number and say "no,
+# job titles turn over faster than that in my domain," and then change it. A model-inferred
+# table would be unarguable and unauditable, which is the opposite of what an audit needs.
+#
+# `half_life_days` is the age at which a fact of this type is assigned 0.5 staleness, absent
+# any other signal. It is NOT a claim that half of such facts are wrong by then — it is a
+# tunable decay constant, and the `basis` field records where the number came from so that
+# a disagreement can be about evidence rather than taste.
+#
+# `null` means the fact does not go stale with time. Those types score 0.0 on age no matter
+# how old they are, and can only be flagged through supersession.
+#
+# DELIBERATE LIMIT: these are population-level priors for a general assistant. They are not
+# calibrated per user, per domain, or per tenant, and a deployment with real base rates
+# should override them. Nothing in the scorer treats this file as ground truth; it is an
+# input a reviewer signs off on.
+
+schema: memory-staleness/volatility@1
+
+defaults:
+  # Applied to FactType.UNCLASSIFIED and to any type missing below. Deliberately short, so an
+  # unclassified fact drifts toward "re-verify" rather than being silently trusted forever.
+  half_life_days: 180
+  basis: "conservative default for unclassified facts; short on purpose"
+
+fact_types:
+  employer:
+    half_life_days: 550
+    basis: "US median employee tenure ~3.9y (BLS 2024); shorter in tech. Half-life set well below median because a memory only has to be wrong once to mislead."
+  job_title:
+    half_life_days: 400
+    basis: "Promotions and re-titling are more frequent than employer changes within a tenure."
+  employment_status:
+    half_life_days: 400
+    basis: "Tracks employer; employed/unemployed/retired transitions are less frequent than title changes."
+  project_status:
+    half_life_days: 45
+    basis: "Sprint- and quarter-scale. 'Working on X' is the single most reliably stale class of assistant memory."
+  residence_city:
+    half_life_days: 1800
+    basis: "US annual mover rate ~8%, and most moves are within the same metro."
+  street_address:
+    half_life_days: 1100
+    basis: "Faster than city: intra-city moves change the address but not the city."
+  phone_number:
+    half_life_days: 2200
+    basis: "Number portability made these very durable post-2004."
+  email_address:
+    half_life_days: 900
+    basis: "Personal addresses are durable; work addresses die with the employer, which is why this is well below phone."
+  marital_status:
+    half_life_days: 3000
+    basis: "Low annual transition rate in both directions."
+  account_balance:
+    half_life_days: 3
+    basis: "Effectively a live value. Any stored balance older than days should be re-read, never recalled."
+  stated_goal:
+    half_life_days: 240
+    basis: "Goals are revised on roughly an annual planning cycle, often sooner."
+  tool_preference:
+    half_life_days: 500
+    basis: "Sticky but not permanent; migrations happen."
+  dietary_restriction:
+    half_life_days: 1500
+    basis: "Mostly durable. Medical restrictions are near-permanent; elective ones are not. Long half-life because a false-stale here is costly and mildly unsafe."
+  date_of_birth:
+    half_life_days: null
+    basis: "Does not change. Can only be wrong at write time, which is a correctness problem, not a staleness one."
+  birthplace:
+    half_life_days: null
+    basis: "Does not change."
+  immutable_identifier:
+    half_life_days: null
+    basis: "Government IDs, customer numbers, primary keys. Reissuance exists but is rare enough that time-decay is the wrong instrument."
