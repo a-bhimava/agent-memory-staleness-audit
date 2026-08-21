@@ -1,0 +1,28 @@
+# Raw audit artifacts NEVER enter git. A scripted audit regenerates in seconds at zero cost,
+# so a committed copy is a liability that can silently drift from the code that made it.
+# The *exported* bundle under audits/exported/ is committed deliberately — that one is
+# hash-verified and is the thing a reader checks.
+# Root-anchored on purpose: an unanchored `audits/` would also match any fixture directory
+# of that name inside tests/.
+/audits/
+!/audits/exported/
+
+*.jsonl
+!tests/**/*.jsonl
+!src/memory_staleness/synth/fixtures/*.jsonl
+!/audits/exported/**/*.jsonl
+
+# Local agent transcripts and worktrees are implementation notes, never audit evidence.
+.claude/
+
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.DS_Store

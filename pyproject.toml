@@ -1,0 +1,65 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "agent-memory-staleness-audit"
+version = "0.1.0.dev0"
+description = "Scores agent memories for silent staleness — high-relevance facts that are wrong with nothing in the store to contradict them."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [{ name = "Aditya Teja Bhimavarapu" }]
+keywords = [
+    "agent-memory", "llm-evaluation", "staleness-detection", "temporal-reasoning",
+    "memory-audit", "rag", "ai-agents", "benchmark",
+]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+# The core install deliberately has no LLM SDK and no memory-store client.
+# Scoring is arithmetic over provenance; a dependency list is a claim about how much of
+# this a reader has to trust, and the scoring path should be trustable without taking a
+# vendor's client library on faith.
+dependencies = [
+    "pydantic>=2.9",
+    "pyyaml>=6.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "ruff>=0.6"]
+# Store adapters are extras because the auditor reads exports, not live stores, by default.
+# `--from-export` needs none of these.
+mem0 = ["mem0ai>=0.1.0"]
+zep = ["zep-cloud>=2.0"]
+
+[project.scripts]
+staleness-audit = "memory_staleness.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/a-bhimava/agent-memory-staleness-audit"
+Issues = "https://github.com/a-bhimava/agent-memory-staleness-audit/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/memory_staleness"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+markers = ["slow: long-running calibration tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "ARG"]
