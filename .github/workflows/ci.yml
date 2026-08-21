@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install
+        run: pip install -e '.[dev]'
+
+      - name: Lint
+        run: ruff check . && ruff format --check .
+
+      - name: Whitespace
+        run: git diff --check
+
+      # The audit makes zero API calls and touches no network by design, so CI needs no
+      # secrets. If this step ever starts needing one, something has been wired wrong.
+      - name: Test
+        run: pytest -q
+
+      # Content ids must not depend on PYTHONHASHSEED. Without this gate, an id derived from
+      # an unordered structure would be stable within a process and different between two,
+      # which is the worst kind of bug: invisible locally, non-reproducible in public.
+      - name: Hash-stability gate
+        run: |
+          A=$(PYTHONHASHSEED=0 python -c "from memory_staleness.ids import content_id; from memory_staleness.synth import generate_store; print(content_id(generate_store(n_per_kind=3).cases))")
+          B=$(PYTHONHASHSEED=12345 python -c "from memory_staleness.ids import content_id; from memory_staleness.synth import generate_store; print(content_id(generate_store(n_per_kind=3).cases))")
+          echo "seed0=$A"
+          echo "seed12345=$B"
+          test "$A" = "$B"
+
+      # Export determinism, then re-derivation. The diff proves the exporter is deterministic;
+      # `verify --strict` proves it is correct — that the numbers in the bundle are the ones
+      # the evidence supports, and not the ones a bug produced consistently.
+      - name: Export determinism and verification gate
+        run: |
+          staleness-audit run --synthetic --n-per-kind 6
+          staleness-audit export --out /tmp/export-a
+          staleness-audit export --out /tmp/export-b
+          diff -r /tmp/export-a /tmp/export-b
+          staleness-audit verify /tmp/export-a --strict
