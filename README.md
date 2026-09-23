@@ -5,21 +5,6 @@
 **Finds agent memories that have quietly gone stale — facts that were true when stored and are
 silently wrong now, with nothing in the memory store to contradict them.**
 
-> ### Status: engine complete, not yet benchmarked
->
-> The scorer, the volatility table, supersession detection, the run/export/verify pipeline, and
-> the CLI are implemented and covered by **66 tests**, including a known-answer layer that scores
-> a synthetic corpus with planted staleness and controls that must stay clean.
->
-> **There are no benchmark results to report.** The STALE evaluation described under
-> [Scoring against STALE](#scoring-against-stale) has not been run, and **no number on this page
-> is a claim about how this tool compares to any memory store.** The 100% figure on the synthetic
-> corpus is a floor, not an achievement — the answers there are known by construction, so anything
-> less would mean the scorer is broken rather than merely weak. When real results exist they will
-> come from a committed run manifest with a content hash.
-
----
-
 ## The problem
 
 An agent stores *"Alice works at Acme."* Six months later Alice has changed jobs. Nothing in the
